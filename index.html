@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Budget-Kompass App</title>
+  <meta name="theme-color" content="#0f172a" />
+  <style>
+    :root{
+      --bg:#020617;
+      --card:#0f172a;
+      --card2:#111827;
+      --line:#1f2937;
+      --text:#e5e7eb;
+      --muted:#94a3b8;
+      --accent:#22c55e;
+      --warn:#f59e0b;
+      --bad:#ef4444;
+      --btn:#1d4ed8;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Arial,Helvetica,sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
+    .wrap{
+      max-width:1100px;
+      margin:0 auto;
+      padding:16px;
+    }
+    .top{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:16px;
+      margin-bottom:18px;
+    }
+    .title h1{
+      margin:0;
+      font-size:30px;
+    }
+    .title p{
+      color:var(--muted);
+      margin:8px 0 0;
+    }
+    .top-right{
+      display:grid;
+      grid-template-columns:1fr 160px;
+      gap:12px;
+    }
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:16px;
+    }
+    label{
+      display:block;
+      font-size:13px;
+      color:var(--muted);
+      margin-bottom:8px;
+    }
+    input, select, button{
+      width:100%;
+      padding:12px;
+      border-radius:12px;
+      border:1px solid #334155;
+      background:#020617;
+      color:var(--text);
+      font-size:14px;
+    }
+    button{
+      background:var(--btn);
+      border:none;
+      cursor:pointer;
+      font-weight:bold;
+    }
+    button.secondary{
+      background:#1e293b;
+      border:1px solid #334155;
+    }
+    .stats{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:12px;
+      margin-bottom:18px;
+    }
+    .stat-title{
+      font-size:13px;
+      color:var(--muted);
+      margin-bottom:8px;
+    }
+    .stat-value{
+      font-size:28px;
+      font-weight:bold;
+    }
+    .badge{
+      display:inline-block;
+      padding:8px 12px;
+      border-radius:999px;
+      font-size:13px;
+      font-weight:bold;
+      background:#1e293b;
+    }
+    .tabs{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-bottom:16px;
+    }
+    .tab-btn{
+      width:auto;
+      padding:10px 14px;
+      border-radius:12px;
+      background:#0f172a;
+      border:1px solid var(--line);
+    }
+    .tab-btn.active{
+      background:#1e293b;
+      outline:2px solid #334155;
+    }
+    .tab{
+      display:none;
+    }
+    .tab.active{
+      display:block;
+    }
+    .grid2{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+    .budget-row, .goal-row, .debt-row, .year-row{
+      display:grid;
+      gap:10px;
+      padding:12px;
+      background:#020617;
+      border:1px solid var(--line);
+      border-radius:16px;
+      margin-bottom:10px;
+    }
+    .budget-row{ grid-template-columns:2fr 1fr 1fr 1fr auto; }
+    .goal-row{ grid-template-columns:2fr 1fr 1fr 1fr auto; }
+    .debt-row{ grid-template-columns:2fr 1fr 1fr auto; }
+    .year-row{ grid-template-columns:1fr 1fr 1fr 1fr; }
+    .muted{ color:var(--muted); font-size:13px; }
+    .danger{
+      background:#3f0d12;
+    }
+    .progress{
+      width:100%;
+      height:10px;
+      background:#1e293b;
+      border-radius:999px;
+      overflow:hidden;
+      margin-top:8px;
+    }
+    .progress > div{
+      height:100%;
+      background:var(--accent);
+      width:0%;
+    }
+    .install{
+      margin-top:12px;
+      color:var(--muted);
+      font-size:13px;
+    }
+    @media (max-width:900px){
+      .stats{grid-template-columns:1fr 1fr}
+      .top-right{grid-template-columns:1fr}
+      .grid2{grid-template-columns:1fr}
+      .budget-row,.goal-row,.debt-row,.year-row{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="title">
+        <h1 id="appTitle">Budget-Kompass App</h1>
+        <p id="appDesc">Einfacher Finanzplaner mit Überblick, Sparzielen, Schuldenplan und Notgroschen-Rechner.</p>
+      </div>
+
+      <div class="top-right">
+        <div class="card">
+          <label id="incomeLabel" for="income">Monatliches Nettoeinkommen</label>
+          <input id="income" type="number" value="2800" />
+        </div>
+        <div class="card">
+          <label for="lang">Sprache</label>
+          <select id="lang">
+            <option value="de">Deutsch</option>
+            <option value="en">English</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="card">
+        <div class="stat-title" id="statIncomeTitle">Einnahmen</div>
+        <div class="stat-value" id="statIncome">€0.00</div>
+      </div>
+      <div class="card">
+        <div class="stat-title" id="statExpensesTitle">Ausgaben aktuell</div>
+        <div class="stat-value" id="statExpenses">€0.00</div>
+      </div>
+      <div class="card">
+        <div class="stat-title" id="statRemainingTitle">Restbetrag</div>
+        <div class="stat-value" id="statRemaining">€0.00</div>
+      </div>
+      <div class="card">
+        <div class="stat-title" id="statStatusTitle">Status</div>
+        <div><span class="badge" id="statStatus">-</span></div>
+        <div class="muted" style="margin-top:8px" id="freeRate">0% frei</div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="budget" id="tabBudget">Budget</button>
+      <button class="tab-btn" data-tab="goals" id="tabGoals">Sparziele</button>
+      <button class="tab-btn" data-tab="emergency" id="tabEmergency">Notgroschen</button>
+      <button class="tab-btn" data-tab="debt" id="tabDebt">Schuldenplan</button>
+      <button class="tab-btn" data-tab="year" id="tabYear">Jahresübersicht</button>
+      <button class="tab-btn" data-tab="guide" id="tabGuide">Kurzanleitung</button>
+    </div>
+
+    <div class="tab active" id="budget">
+      <div class="card">
+        <h3 id="budgetTitle">Monatsbudget</h3>
+        <div class="grid2" style="margin-bottom:12px">
+          <input id="newCategory" placeholder="Neue Kategorie" />
+          <input id="newPlanned" type="number" placeholder="Geplant" />
+        </div>
+        <div style="margin-bottom:14px">
+          <button id="addCategoryBtn">Kategorie hinzufügen</button>
+        </div>
+        <div id="budgetList"></div>
+      </div>
+    </div>
+
+    <div class="tab" id="goals">
+      <div class="card">
+        <h3 id="goalsTitle">Sparziele</h3>
+        <div style="margin-bottom:14px">
+          <button id="addGoalBtn">Neues Sparziel hinzufügen</button>
+        </div>
+        <div id="goalsList"></div>
+      </div>
+    </div>
+
+    <div class="tab" id="emergency">
+      <div class="card">
+        <h3 id="emergencyTitle">Notgroschen-Rechner</h3>
+        <div class="grid2">
+          <div>
+            <label id="monthsLabel" for="months">Absicherung in Monaten</label>
+            <input id="months" type="number" value="3" />
+          </div>
+          <div class="card" style="margin:0">
+            <div class="muted" id="recommendedTitle">Empfohlenes Ziel</div>
+            <div class="stat-value" id="emergencyValue" style="margin-top:8px">€0.00</div>
+            <div class="install" id="emergencyHint">Berechnet auf Basis deiner wichtigsten Grundkosten.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab" id="debt">
+      <div class="card">
+        <h3 id="debtTitle">Schuldenplan</h3>
+        <div style="margin-bottom:14px">
+          <button id="addDebtBtn">Neue Schuld hinzufügen</button>
+        </div>
+        <div id="debtTotal" class="muted" style="margin-bottom:12px"></div>
+        <div id="debtList"></div>
+      </div>
+    </div>
+
+    <div class="tab" id="year">
+      <div class="card">
+        <h3 id="yearTitle">Jahresübersicht</h3>
+        <div class="muted" id="yearHint" style="margin-bottom:12px">Einfache Vorschau auf deine Finanzentwicklung.</div>
+        <div id="yearList"></div>
+      </div>
+    </div>
+
+    <div class="tab" id="guide">
+      <div class="card">
+        <h3 id="guideTitle">Kurzanleitung</h3>
+        <p id="g1">1. Einkommen eintragen und Budgetkategorien anpassen.</p>
+        <p id="g2">2. Tatsächliche Ausgaben laufend erfassen.</p>
+        <p id="g3">3. Sparziele und Notgroschen regelmäßig prüfen.</p>
+        <p id="g4">4. Jahresübersicht nutzen, um Muster zu erkennen.</p>
+        <div class="install" id="installHint">Tipp: Nach dem Hochladen kannst du die Seite auf dem Handy zum Startbildschirm hinzufügen.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const i18n = {
+      de: {
+        appTitle:"Budget-Kompass App",
+        appDesc:"Einfacher Finanzplaner mit Überblick, Sparzielen, Schuldenplan und Notgroschen-Rechner.",
+        incomeLabel:"Monatliches Nettoeinkommen",
+        statIncomeTitle:"Einnahmen",
+        statExpensesTitle:"Ausgaben aktuell",
+        statRemainingTitle:"Restbetrag",
+        statStatusTitle:"Status",
+        tabBudget:"Budget",
+        tabGoals:"Sparziele",
+        tabEmergency:"Notgroschen",
+        tabDebt:"Schuldenplan",
+        tabYear:"Jahresübersicht",
+        tabGuide:"Kurzanleitung",
+        budgetTitle:"Monatsbudget",
+        newCategory:"Neue Kategorie",
+        planned:"Geplant",
+        actual:"Tatsächlich",
+        difference:"Differenz",
+        addCategoryBtn:"Kategorie hinzufügen",
+        goalsTitle:"Sparziele",
+        addGoalBtn:"Neues Sparziel hinzufügen",
+        emergencyTitle:"Notgroschen-Rechner",
+        monthsLabel:"Absicherung in Monaten",
+        recommendedTitle:"Empfohlenes Ziel",
+        emergencyHint:"Berechnet auf Basis deiner wichtigsten Grundkosten.",
+        debtTitle:"Schuldenplan",
+        addDebtBtn:"Neue Schuld hinzufügen",
+        yearTitle:"Jahresübersicht",
+        yearHint:"Einfache Vorschau auf deine Finanzentwicklung.",
+        guideTitle:"Kurzanleitung",
+        g1:"1. Einkommen eintragen und Budgetkategorien anpassen.",
+        g2:"2. Tatsächliche Ausgaben laufend erfassen.",
+        g3:"3. Sparziele und Notgroschen regelmäßig prüfen.",
+        g4:"4. Jahresübersicht nutzen, um Muster zu erkennen.",
+        installHint:"Tipp: Nach dem Hochladen kannst du die Seite auf dem Handy zum Startbildschirm hinzufügen.",
+        green:"Im grünen Bereich",
+        warn:"Achtung",
+        bad:"Negativ",
+        free:"frei",
+        saved:"gespart",
+        goalName:"Zielname",
+        debtName:"Schuld",
+        amount:"Betrag",
+        monthly:"Monatsrate",
+        remove:"Löschen",
+        january:"Jan", february:"Feb", march:"Mär", april:"Apr", may:"Mai", june:"Jun",
+        july:"Jul", august:"Aug", september:"Sep", october:"Okt", november:"Nov", december:"Dez",
+        totalDebt:"Offene Schulden gesamt"
+      },
+      en: {
+        appTitle:"Budget Compass App",
+        appDesc:"Simple financial planner with overview, savings goals, debt plan and emergency fund calculator.",
+        incomeLabel:"Monthly net income",
+        statIncomeTitle:"Income",
+        statExpensesTitle:"Current expenses",
+        statRemainingTitle:"Remaining balance",
+        statStatusTitle:"Status",
+        tabBudget:"Budget",
+        tabGoals:"Savings Goals",
+        tabEmergency:"Emergency Fund",
+        tabDebt:"Debt Plan",
+        tabYear:"Year Overview",
+        tabGuide:"Quick Guide",
+        budgetTitle:"Monthly Budget",
+        newCategory:"New category",
+        planned:"Planned",
+        actual:"Actual",
+        difference:"Difference",
+        addCategoryBtn:"Add category",
+        goalsTitle:"Savings Goals",
+        addGoalBtn:"Add new savings goal",
+        emergencyTitle:"Emergency Fund Calculator",
+        monthsLabel:"Coverage in months",
+        recommendedTitle:"Recommended target",
+        emergencyHint:"Calculated based on your main essential costs.",
+        debtTitle:"Debt Plan",
+        addDebtBtn:"Add new debt",
+        yearTitle:"Year Overview",
+        yearHint:"Simple preview of your financial development.",
+        guideTitle:"Quick Guide",
+        g1:"1. Enter your income and adjust your budget categories.",
+        g2:"2. Track your real spending as the month progresses.",
+        g3:"3. Review savings goals and emergency fund regularly.",
+        g4:"4. Use the year overview to spot patterns.",
+        installHint:"Tip: After uploading, you can add the page to your phone home screen.",
+        green:"Healthy",
+        warn:"Warning",
+        bad:"Negative",
+        free:"free",
+        saved:"saved",
+        goalName:"Goal name",
+        debtName:"Debt",
+        amount:"Amount",
+        monthly:"Monthly payment",
+        remove:"Delete",
+        january:"Jan", february:"Feb", march:"Mar", april:"Apr", may:"May", june:"Jun",
+        july:"Jul", august:"Aug", september:"Sep", october:"Oct", november:"Nov", december:"Dec",
+        totalDebt:"Total open debt"
+      }
+    };
+
+    const defaultData = {
+      lang: "de",
+      income: 2800,
+      months: 3,
+      budget: [
+        { id: Date.now()+1, category: "Miete", planned: 900, actual: 900 },
+        { id: Date.now()+2, category: "Strom", planned: 70, actual: 70 },
+        { id: Date.now()+3, category: "Internet", planned: 40, actual: 40 },
+        { id: Date.now()+4, category: "Lebensmittel", planned: 320, actual: 0 },
+        { id: Date.now()+5, category: "Tanken", planned: 180, actual: 0 },
+        { id: Date.now()+6, category: "Freizeit", planned: 120, actual: 0 }
+      ],
+      goals: [
+        { id: Date.now()+7, name: "Notgroschen", target: 5000, saved: 800 },
+        { id: Date.now()+8, name: "Urlaub", target: 1500, saved: 250 }
+      ],
+      debts: [
+        { id: Date.now()+9, name: "Kreditkarte", amount: 1200, monthly: 80 },
+        { id: Date.now()+10, name: "Ratenkauf", amount: 2400, monthly: 150 }
+      ]
+    };
+
+    let state = load();
+
+    function load(){
+      const raw = localStorage.getItem("budgetkompass_app_v1");
+      if(!raw) return structuredClone(defaultData);
+      try { return JSON.parse(raw); } catch { return structuredClone(defaultData); }
+    }
+
+    function save(){
+      localStorage.setItem("budgetkompass_app_v1", JSON.stringify(state));
+    }
+
+    function t(key){
+      return i18n[state.lang][key];
+    }
+
+    function money(v){
+      return new Intl.NumberFormat(state.lang === "de" ? "de-DE" : "en-US", {
+        style:"currency",
+        currency:"EUR"
+      }).format(Number(v || 0));
+    }
+
+    function applyTexts(){
+      const keys = [
+        "appTitle","appDesc","incomeLabel","statIncomeTitle","statExpensesTitle","statRemainingTitle","statStatusTitle",
+        "tabBudget","tabGoals","tabEmergency","tabDebt","tabYear","tabGuide","budgetTitle","goalsTitle","emergencyTitle",
+        "monthsLabel","recommendedTitle","emergencyHint","debtTitle","yearTitle","yearHint","guideTitle","g1","g2","g3","g4","installHint"
+      ];
+      keys.forEach(k => {
+        const el = document.getElementById(k);
+        if(el) el.textContent = t(k);
+      });
+      document.getElementById("newCategory").placeholder = t("newCategory");
+      document.getElementById("newPlanned").placeholder = t("planned");
+      document.getElementById("addCategoryBtn").textContent = t("addCategoryBtn");
+      document.getElementById("addGoalBtn").textContent = t("addGoalBtn");
+      document.getElementById("addDebtBtn").textContent = t("addDebtBtn");
+    }
+
+    function compute(){
+      const income = Number(state.income || 0);
+      const expenses = state.budget.reduce((a,b)=>a+Number(b.actual||0),0);
+      const remaining = income - expenses;
+      const freeRate = income > 0 ? Math.max(0, remaining/income*100) : 0;
+
+      const emergencyBase = state.budget
+        .filter(x => ["Miete","Strom","Internet","Rent","Electricity","Internet"].includes(x.category))
+        .reduce((a,b)=>a+Number(b.actual||b.planned||0),0);
+
+      const emergency = emergencyBase * Number(state.months || 0);
+      const totalDebt = state.debts.reduce((a,b)=>a+Number(b.amount||0),0);
+
+      return { income, expenses, remaining, freeRate, emergency, totalDebt };
+    }
+
+    function renderStats(){
+      const c = compute();
+      document.getElementById("statIncome").textContent = money(c.income);
+      document.getElementById("statExpenses").textContent = money(c.expenses);
+      document.getElementById("statRemaining").textContent = money(c.remaining);
+      document.getElementById("emergencyValue").textContent = money(c.emergency);
+      document.getElementById("debtTotal").textContent = `${t("totalDebt")}: ${money(c.totalDebt)}`;
+
+      let status = t("warn");
+      let bg = "#3f3f1a";
+      if(c.remaining >= 300){ status = t("green"); bg = "#0f3d25"; }
+      if(c.remaining < 0){ status = t("bad"); bg = "#4b1113"; }
+
+      const badge = document.getElementById("statStatus");
+      badge.textContent = status;
+      badge.style.background = bg;
+      document.getElementById("freeRate").textContent = `${c.freeRate.toFixed(1)}% ${t("free")}`;
+    }
+
+    function renderBudget(){
+      const list = document.getElementById("budgetList");
+      list.innerHTML = "";
+      state.budget.forEach(item=>{
+        const diff = Number(item.planned||0) - Number(item.actual||0);
+        const row = document.createElement("div");
+        row.className = "budget-row";
+        row.innerHTML = `
+          <input value="${escapeHtml(item.category)}" />
+          <input type="number" value="${item.planned}" />
+          <input type="number" value="${item.actual}" />
+          <div class="muted">${t("difference")}: ${money(diff)}</div>
+          <button class="secondary">${t("remove")}</button>
+        `;
+        const inputs = row.querySelectorAll("input");
+        inputs[0].addEventListener("input", e=>{ item.category = e.target.value; save(); renderAll(); });
+        inputs[1].addEventListener("input", e=>{ item.planned = Number(e.target.value||0); save(); renderAll(); });
+        inputs[2].addEventListener("input", e=>{ item.actual = Number(e.target.value||0); save(); renderAll(); });
+        row.querySelector("button").addEventListener("click", ()=>{
+          state.budget = state.budget.filter(x=>x.id!==item.id);
+          save(); renderAll();
+        });
+        list.appendChild(row);
+      });
+    }
+
+    function renderGoals(){
+      const list = document.getElementById("goalsList");
+      list.innerHTML = "";
+      state.goals.forEach(goal=>{
+        const pct = goal.target > 0 ? Math.min(100, goal.saved / goal.target * 100) : 0;
+        const row = document.createElement("div");
+        row.className = "goal-row";
+        row.innerHTML = `
+          <input value="${escapeHtml(goal.name)}" />
+          <input type="number" value="${goal.target}" />
+          <input type="number" value="${goal.saved}" />
+          <div>
+            <div class="muted">${money(goal.saved)} ${t("saved")} · ${pct.toFixed(0)}%</div>
+            <div class="progress"><div style="width:${pct}%"></div></div>
+          </div>
+          <button class="secondary">${t("remove")}</button>
+        `;
+        const inputs = row.querySelectorAll("input");
+        inputs[0].addEventListener("input", e=>{ goal.name = e.target.value; save(); renderAll(); });
+        inputs[1].addEventListener("input", e=>{ goal.target = Number(e.target.value||0); save(); renderAll(); });
+        inputs[2].addEventListener("input", e=>{ goal.saved = Number(e.target.value||0); save(); renderAll(); });
+        row.querySelector("button").addEventListener("click", ()=>{
+          state.goals = state.goals.filter(x=>x.id!==goal.id);
+          save(); renderAll();
+        });
+        list.appendChild(row);
+      });
+    }
+
+    function renderDebts(){
+      const list = document.getElementById("debtList");
+      list.innerHTML = "";
+      state.debts.forEach(debt=>{
+        const row = document.createElement("div");
+        row.className = "debt-row";
+        row.innerHTML = `
+          <input value="${escapeHtml(debt.name)}" />
+          <input type="number" value="${debt.amount}" />
+          <input type="number" value="${debt.monthly}" />
+          <button class="secondary">${t("remove")}</button>
+        `;
+        const inputs = row.querySelectorAll("input");
+        inputs[0].addEventListener("input", e=>{ debt.name = e.target.value; save(); renderAll(); });
+        inputs[1].addEventListener("input", e=>{ debt.amount = Number(e.target.value||0); save(); renderAll(); });
+        inputs[2].addEventListener("input", e=>{ debt.monthly = Number(e.target.value||0); save(); renderAll(); });
+        row.querySelector("button").addEventListener("click", ()=>{
+          state.debts = state.debts.filter(x=>x.id!==debt.id);
+          save(); renderAll();
+        });
+        list.appendChild(row);
+      });
+    }
+
+    function renderYear(){
+      const months = [
+        t("january"), t("february"), t("march"), t("april"), t("may"), t("june"),
+        t("july"), t("august"), t("september"), t("october"), t("november"), t("december")
+      ];
+      const currentExpenses = state.budget.reduce((a,b)=>a+Number(b.actual||0),0);
+      const list = document.getElementById("yearList");
+      list.innerHTML = "";
+      months.forEach((m,i)=>{
+        const exp = i === 0 ? currentExpenses : Math.round(currentExpenses * 0.92);
+        const rem = Number(state.income||0) - exp;
+        const row = document.createElement("div");
+        row.className = "year-row";
+        row.innerHTML = `
+          <div>${m}</div>
+          <div>${money(state.income)}</div>
+          <div>${money(exp)}</div>
+          <div>${money(rem)}</div>
+        `;
+        list.appendChild(row);
+      });
+    }
+
+    function renderAll(){
+      document.getElementById("lang").value = state.lang;
+      document.getElementById("income").value = state.income;
+      document.getElementById("months").value = state.months;
+      applyTexts();
+      renderStats();
+      renderBudget();
+      renderGoals();
+      renderDebts();
+      renderYear();
+    }
+
+    function escapeHtml(str){
+      return String(str)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;");
+    }
+
+    document.getElementById("income").addEventListener("input", e=>{
+      state.income = Number(e.target.value || 0);
+      save(); renderAll();
+    });
+
+    document.getElementById("months").addEventListener("input", e=>{
+      state.months = Number(e.target.value || 0);
+      save(); renderAll();
+    });
+
+    document.getElementById("lang").addEventListener("change", e=>{
+      state.lang = e.target.value;
+      save(); renderAll();
+    });
+
+    document.getElementById("addCategoryBtn").addEventListener("click", ()=>{
+      const c = document.getElementById("newCategory").value.trim();
+      const p = Number(document.getElementById("newPlanned").value || 0);
+      if(!c) return;
+      state.budget.push({ id: Date.now(), category: c, planned: p, actual: 0 });
+      document.getElementById("newCategory").value = "";
+      document.getElementById("newPlanned").value = "";
+      save(); renderAll();
+    });
+
+    document.getElementById("addGoalBtn").addEventListener("click", ()=>{
+      state.goals.push({
+        id: Date.now(),
+        name: state.lang === "de" ? "Neues Ziel" : "New Goal",
+        target: 1000,
+        saved: 0
+      });
+      save(); renderAll();
+    });
+
+    document.getElementById("addDebtBtn").addEventListener("click", ()=>{
+      state.debts.push({
+        id: Date.now(),
+        name: state.lang === "de" ? "Neue Schuld" : "New Debt",
+        amount: 0,
+        monthly: 0
+      });
+      save(); renderAll();
+    });
+
+    document.querySelectorAll(".tab-btn").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        document.querySelectorAll(".tab-btn").forEach(x=>x.classList.remove("active"));
+        document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+        btn.classList.add("active");
+        document.getElementById(btn.dataset.tab).classList.add("active");
+      });
+    });
+
+    renderAll();
+  </script>
+</body>
+</html>
